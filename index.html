@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Mocha Tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/dev-assets/mocha.css" />
+    <script src="/sw.js"></script>
+    <!-- <script type="importmap">
+  {
+    "imports": {
+      "browser-fs-access": "https://unpkg.com/browser-fs-access@0.33.0/dist/index.modern.js"
+    }
+  }
+</script> -->
+  </head>
+  <body>
+    <div id="mocha"></div>
+
+    <script src="/dev-assets/chai.js"></script>
+    <script src="/dev-assets/mocha.js"></script>
+
+    <script class="mocha-init">
+      mocha.setup("bdd");
+      mocha.checkLeaks();
+    </script>
+    <!-- These scripts are the test scripts -->
+    <!-- <script src="" type="module"></script> -->
+    <script class="mocha-exec">
+      mocha.run();
+    </script>
+  </body>
+</html>

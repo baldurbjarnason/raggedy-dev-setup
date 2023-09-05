@@ -1,0 +1,15 @@
+{
+	"$schema": "./dev-assets/biome-schema.json",
+	"organizeImports": {
+		"enabled": true
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"correctness": {
+				"noUnusedVariables": "warn"
+			}
+		}
+	}
+}
