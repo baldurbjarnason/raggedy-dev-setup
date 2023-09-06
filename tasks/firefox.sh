@@ -2,8 +2,6 @@
 set -eu
 
 FIREFOX_PATHS=( \
-  "/opt/homebrew-cask/Caskroom/google-chrome-dev/latest/Google Chrome.app/Contents/MacOS/Google Chrome" \
-  "/opt/homebrew-cask/Caskroom/google-chrome/latest/Google Chrome.app/Contents/MacOS/Google Chrome" \
   "/Applications/Firefox.app/Contents/MacOS/firefox" \
   "firefox"
 )
