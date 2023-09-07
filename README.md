@@ -39,6 +39,12 @@ Running `tasks/serve` will start up a simple `https` web server that hosts the
 current directory and an HTML page that runs all test files found in `tests/`
 and automatically includes the `import_map.json` file as an import map.
 
+This server is set up to deliver files with all the necessary headers to enable
+[cross-site isolation](https://web.dev/coop-coep/). This means that features
+such as `SharedArrayBuffer`, high resolution timers, and `Atomics.wait()`. As a
+result cross-origin resources are likely to break. At some point I'll update
+this to make this configurable so you can turn isolation off if necessary.
+
 This page will automatically refresh any time something in the current working
 directory is changed.
 
