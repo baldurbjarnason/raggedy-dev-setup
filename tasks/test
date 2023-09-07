@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+
+BROWSER=tasks/chrome
+# BROWSER=tasks/firefox
+
+
+
+$BROWSER &
+tasks/serve

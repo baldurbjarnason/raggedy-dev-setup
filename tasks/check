@@ -4,5 +4,6 @@ shopt -s extglob
 shopt -s globstar
 
 SRC_DIR=src
+TEST_DIR=tests
 
-./.bin/deno check $SRC_DIR/**/*.js
+./.bin/deno check $SRC_DIR/**/*.js $TEST_DIR/**/*.js
