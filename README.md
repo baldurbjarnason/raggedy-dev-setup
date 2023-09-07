@@ -6,7 +6,9 @@ This is an attempt to define a minimalistic setup for web development where the
 primary runtime for the project is the browser itself, not node or deno.
 
 Deno is used here to implement some dev tasks but only in a capacity that's
-similar to how bash or external command line tools work.
+similar to how bash or external command line tools work. You don't need to have
+deno installed to use this, the setup script will download a local copy that'll
+be used in just this project.
 
 ## Tasks
 
