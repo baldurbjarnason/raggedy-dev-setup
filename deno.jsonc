@@ -1,0 +1,37 @@
+{
+	// So, a big reason to use deno is for type checking and I strongly prefer deno's typescript checking behaviour over typescript's own, especially for browser code.
+	"compilerOptions": {
+		// Set checkJS here to true to opt in to type checking in each file and if you need to disable type checking for a JS file then including "// @ts-nocheck" (no quotes) at the top of the file should do it.
+		// With checkJS set to false (the default) then a "// @ts-check" (no quotes) at the top of a file will enable checking.
+		"checkJs": false,
+		"lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
+	},
+	"lint": {
+		"exclude": [".test/", "dist/"],
+		"rules": {
+			"tags": ["recommended"],
+			"exclude": ["ban-ts-comment"]
+		}
+	},
+	// Tabs are more accessible
+	"fmt": {
+		"exclude": [".test/", "dist/"],
+		"useTabs": true
+	},
+	// Defer to an external import map as that's simpler for other scripts to parse than a jsonc file.
+	"importMap": "import_map.json"
+}
+// Most of the time the above will work for both browser and deno code, especially since the point of this setup is to focus on browser code.
+// To type check deno only worker code you need to set "lib" in those file specifically. Something like:
+/// <reference no-default-lib="true" />
+/// <reference lib="deno.worker" />
+
+// Or for deno only code
+/// <reference no-default-lib="true" />
+/// <reference lib="deno.window" />
+
+// Or for regular workers code
+/// <reference no-default-lib="true" />
+/// <reference lib="webworker" />
+/// <reference lib="webworker.importscripts" />
+/// <reference lib="webworker.iterable" />

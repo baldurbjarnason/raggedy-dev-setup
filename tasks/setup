@@ -1,0 +1,45 @@
+#!/bin/sh
+set -eu
+platform=$(uname -ms)
+
+mkdir -p .bin
+
+# This bit is from the deno install script, MIT licenced, https://github.com/denoland/deno
+
+echo
+echo "Installing deno"
+
+if ! command -v unzip >/dev/null; then
+  echo "Error: unzip is required to install Deno (see: https://github.com/denoland/deno_install#unzip-is-required )." 1>&2
+  exit 1
+fi
+
+# The setup script we're currently in doesn't actually support windows
+
+case $(uname -sm) in
+"Darwin x86_64") target="x86_64-apple-darwin" ;;
+"Darwin arm64") target="aarch64-apple-darwin" ;;
+"Linux aarch64")
+  echo "Error: Official Deno builds for Linux aarch64 are not available. (see: https://github.com/denoland/deno/issues/1846 )" 1>&2
+  exit 1
+  ;;
+*) target="x86_64-unknown-linux-gnu" ;;
+esac
+# We pin versions in this house because we don't like moving targets
+DENO_VERSION="v1.36.4"
+deno_uri="https://github.com/denoland/deno/releases/download/${DENO_VERSION}/deno-${target}.zip"
+
+EXE=".bin/deno"
+
+curl --fail --location --progress-bar --output "$EXE.zip" "$deno_uri"
+unzip -d ".bin" -o "$EXE.zip"
+chmod +x "$EXE"
+rm "$EXE.zip"
+
+# This bit is just bog standard openssl key generation
+
+echo
+echo "Generating key and cert files for https test server"
+openssl req -x509 -newkey rsa:4096 -keyout $PWD/.bin/dev.key -out $PWD/.bin/dev.cert -days 9999 -nodes -subj /CN=127.0.0.1 &> /dev/null
+
+echo "Setup done"

@@ -1,0 +1,132 @@
+#!/usr/bin/env -S deno run --allow-net --allow-read
+// @ts-nocheck
+import { serveDir } from "https://deno.land/std@0.201.0/http/file_server.ts";
+import { expandGlobSync } from "https://deno.land/std@0.201.0/fs/mod.ts";
+import { relative } from "https://deno.land/std@0.201.0/path/mod.ts";
+import {
+	ServerSentEvent,
+	ServerSentEventStreamTarget,
+} from "https://deno.land/std@0.201.0/http/server_sent_event.ts";
+
+// CONFIG
+
+const port = 8888;
+const mochaInterface = "bdd";
+const mochaTimeout = 2000;
+
+// ENDCONFIG
+
+const cert = await Deno.readTextFile(".bin/dev.cert");
+const key = await Deno.readTextFile(".bin/dev.key");
+
+Deno.serve({ cert, key, port }, async (req) => {
+	const pathname = new URL(req.url).pathname;
+	if (pathname === "/") {
+		return handle(handle(await supportfiles()));
+	} else if (pathname === "/.changes") {
+		return handleChanges();
+	} else {
+		return handle(await serveDir(req));
+	}
+});
+
+const _watcher = watch();
+
+let targets = [];
+
+function handleChanges() {
+	const target = new ServerSentEventStreamTarget();
+	targets = targets.concat(target);
+	return target.asResponse();
+}
+
+async function watch() {
+	const watcher = Deno.watchFs(Deno.cwd());
+	for await (const event of watcher) {
+		const evt = new ServerSentEvent(
+			"change",
+			{ change: event.paths },
+		);
+		for (const target of targets) {
+			target.dispatchEvent(evt);
+		}
+	}
+}
+
+/**
+ * Handles the request. Adds the headers needed for cross origin isolation
+ *
+ * @param {Response}  response - A response.
+ * @returns {Response} This is the result
+ */
+function handle(response) {
+	const newHeaders = new Headers(response.headers);
+	newHeaders.set("Cross-Origin-Embedder-Policy", "require-corp");
+	newHeaders.set("Cross-Origin-Resource-Policy", "cross-origin");
+	newHeaders.set("Cross-Origin-Opener-Policy", "same-origin");
+	return new Response(response.body, {
+		status: response.status,
+		statusText: response.statusText,
+		headers: newHeaders,
+	});
+}
+
+/**
+ * @param {Request}  req - A request.
+ * @returns {Promise<Response>} This is the result
+ */
+function supportfiles() {
+	return renderTestHTML();
+}
+
+async function renderTestHTML() {
+	const testFiles = Array.from(expandGlobSync("tests/**/*.js")).map((
+		walkEntry,
+	) => walkEntry.path).map((path) => {
+		path = relative(Deno.cwd(), path);
+		return `<script type="module" src="${path}"></script>`;
+	}).join("\n");
+
+	const importMap = await Deno.readTextFile("import_map.json");
+
+	const body = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Mocha Tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/.test/mocha.css" />
+    <script type="importmap">
+${importMap}
+  	</script>
+  </head>
+  <body>
+    <div id="mocha"></div>
+
+    <script src="/.test/chai.js"></script>
+    <script src="/.test/mocha.js"></script>
+
+    <script type="module">
+      mocha.setup({ui: "${mochaInterface}", timeout: "${mochaTimeout}"});
+      mocha.checkLeaks();
+      window.addEventListener("load", function () {
+        mocha.run()
+				const source = new EventSource('/.changes')
+				source.addEventListener('change', () => {
+					source.close();
+					location.reload();
+				})
+      })
+    </script>
+    <!-- These scripts are the test scripts -->
+    ${testFiles}
+  </body>
+</html>
+`;
+	return new Response(body, {
+		status: 200,
+		headers: {
+			"content-type": "text/html; charset=utf-8",
+		},
+	});
+}

@@ -1,0 +1,8 @@
+#!/bin/bash
+set -eu
+shopt -s extglob
+shopt -s globstar
+
+SRC_DIR=src
+
+./.bin/deno check $SRC_DIR/**/*.js

@@ -1,13 +1,19 @@
 {
+	"deno.enable": true,
+	"deno.path": ".bin/deno",
+	"deno.testing.enable": false,
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "denoland.vscode-deno",
 	"[javascript]": {
-		"editor.defaultFormatter": "biomejs.biome"
+		"editor.defaultFormatter": "denoland.vscode-deno"
+	},
+	"[json]": {
+		"editor.defaultFormatter": "denoland.vscode-deno"
+	},
+	"[jsonc]": {
+		"editor.defaultFormatter": "denoland.vscode-deno"
 	},
 	"[typescript]": {
-		"editor.defaultFormatter": "biomejs.biome"
-	},
-	"editor.codeActionsOnSave": {
-		"source.organizeImports.biome": true,
-		"quickfix.biome": true
-	},
-	"biome.lspBin": "./.bin/biome"
+		"editor.defaultFormatter": "denoland.vscode-deno"
+	}
 }
