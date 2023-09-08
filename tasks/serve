@@ -43,12 +43,15 @@ function handleChanges() {
 async function watch() {
 	const watcher = Deno.watchFs(Deno.cwd());
 	for await (const event of watcher) {
-		const evt = new ServerSentEvent(
-			"change",
-			{ change: event.paths },
-		);
-		for (const target of targets) {
-			target.dispatchEvent(evt);
+		const paths = event.paths.filter((path) => path.endsWith(".js"));
+		if (paths.length !== 0) {
+			const evt = new ServerSentEvent(
+				"change",
+				{ change: event.paths },
+			);
+			for (const target of targets) {
+				target.dispatchEvent(evt);
+			}
 		}
 	}
 }
