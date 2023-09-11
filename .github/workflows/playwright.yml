@@ -15,6 +15,10 @@ jobs:
           node-version: lts/*
       - name: Setup
         run: tasks/setup
+      - name: Lint
+        run: tasks/lint
+      - name: JSDoc check
+        run: tasks/check
       - name: Install CI dependencies
         run: tasks/ci
       - name: Install Playwright Browsers

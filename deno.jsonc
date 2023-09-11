@@ -7,7 +7,7 @@
 		"lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
 	},
 	"lint": {
-		"exclude": [".test/", "dist/"],
+		"exclude": [".test/", "dist/", "ci/"],
 		"rules": {
 			"tags": ["recommended"],
 			"exclude": ["ban-ts-comment"]
