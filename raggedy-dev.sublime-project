@@ -1,0 +1,24 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"LSP": {
+			"Deno": {
+				"enabled": true,
+				"command": ["./.bin/deno", "lsp"],
+				"settings": {
+					"deno.config": "./deno.jsonc",
+					"deno.enable": true,
+					"deno.lint": true,
+					"deno.suggest.imports.autoDiscover": true
+				}
+			},
+			"LSP-typescript": {
+				"enabled": false
+			}
+		}
+	}
+}
