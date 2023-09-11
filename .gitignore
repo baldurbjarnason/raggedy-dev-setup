@@ -55,3 +55,6 @@ dist
 # Ignore local binaries. If you're using your own .gitignore, this is the line to add to it.
 .bin/
 *.sublime-workspace
+
+# This should not be saved
+playwright-report
