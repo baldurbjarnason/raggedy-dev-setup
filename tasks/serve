@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-net --allow-read
+#!/usr/bin/env -S ./.bin/deno run --allow-net --allow-read
 // @ts-nocheck
 import { serveDir } from "https://deno.land/std@0.201.0/http/file_server.ts";
 import { expandGlobSync } from "https://deno.land/std@0.201.0/fs/mod.ts";
