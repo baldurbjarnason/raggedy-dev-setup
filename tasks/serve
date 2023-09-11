@@ -7,12 +7,16 @@ import {
 	ServerSentEvent,
 	ServerSentEventStreamTarget,
 } from "https://deno.land/std@0.201.0/http/server_sent_event.ts";
+import { parse } from "https://deno.land/std@0.201.0/flags/mod.ts";
+
+const parsedArgs = parse(Deno.args);
 
 // CONFIG
 
-const port = 8888;
-const mochaInterface = "bdd";
-const mochaTimeout = 2000;
+const port = parsedArgs.port || 8888;
+const mochaInterface = parsedArgs.interface || "bdd";
+const mochaTimeout = parsedArgs.timeout || 2000;
+const watch = parsedArgs["no-watch"] ? false : true;
 
 // ENDCONFIG
 
@@ -30,7 +34,9 @@ Deno.serve({ cert, key, port }, async (req) => {
 	}
 });
 
-const _watcher = watch();
+if (watch) {
+	const _watcher = startWatch();
+}
 
 let targets = [];
 
@@ -40,7 +46,7 @@ function handleChanges() {
 	return target.asResponse();
 }
 
-async function watch() {
+async function startWatch() {
 	const watcher = Deno.watchFs(Deno.cwd());
 	for await (const event of watcher) {
 		const paths = event.paths.filter((path) => path.endsWith(".js"));
