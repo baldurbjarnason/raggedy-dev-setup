@@ -80,6 +80,19 @@ files by including `// @ts-check` in the first line of the file.
 Running `tasks/check` will run deno's typescript checker on all files in the
 `src` directory. You can configure this in the `tasks/check` file.
 
+## Continuous Integration
+
+This setup includes continuous integration. Whenever you push to GitHub it will
+run an Action that installs [Playwright](https://playwright.dev/), runs the
+Mocha tests in Firefox, WebKit, and Chrome and passes or fails depending on the
+results of the Mocha unit tests.
+
+These tests only run in the action and you don't need to have node or a node
+version manager to use this setup.
+
+You can include additional integration tests by adding Playwright test files to
+`ci/tests`.
+
 ## Bundling
 
 Running `tasks/check` will bundle `src/index.js` into `dist` using esbuild. It
