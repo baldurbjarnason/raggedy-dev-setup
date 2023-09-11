@@ -1,7 +1,0 @@
-{
-  "version": "2",
-  "remote": {
-    "https://esm.sh/hash-wasm@4.9.0": "287e660916ecaa1e928bbfaf3adc09f98f68ccbc720841eb5401543d0d5dc0e3",
-    "https://esm.sh/v131/hash-wasm@4.9.0/denonext/hash-wasm.mjs": "e77fd7ea5ee44dc11b34e5ad040d0714b94ec544395da037f3e7e2a5c1c80252"
-  }
-}

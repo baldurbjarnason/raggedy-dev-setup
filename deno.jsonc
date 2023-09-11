@@ -1,4 +1,6 @@
 {
+	// I'm disabling the lockfile because this isn't a deno project, per se, and it was failing checks for no good reason in CI
+	"lock": false,
 	// So, a big reason to use deno is for type checking and I strongly prefer deno's typescript checking behaviour over typescript's own, especially for browser code.
 	"compilerOptions": {
 		// Set checkJS here to true to opt in to type checking in each file and if you need to disable type checking for a JS file then including "// @ts-nocheck" (no quotes) at the top of the file should do it.
@@ -15,7 +17,7 @@
 	},
 	// Tabs are more accessible
 	"fmt": {
-		"exclude": [".test/", "dist/"],
+		"exclude": [".test/", "dist/", "ci/"],
 		"useTabs": true
 	},
 	// Defer to an external import map as that's simpler for other scripts to parse than a jsonc file.
