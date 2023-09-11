@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+
+cp ci/package.json package.json
+cp ci/package-lock.json package-lock.json
+cp ci/playwright.config.js playwright.config.js
+npm ci

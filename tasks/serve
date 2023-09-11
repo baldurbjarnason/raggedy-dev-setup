@@ -119,7 +119,9 @@ ${importMap}
       mocha.setup({ui: "${mochaInterface}", timeout: "${mochaTimeout}"});
       mocha.checkLeaks();
       window.addEventListener("load", function () {
-        mocha.run()
+        mocha.run(function (failures) {
+					window._testResults = {done: true,failures, succeeded: failures ? false : true }
+				})
 				const source = new EventSource('/.changes')
 				source.addEventListener('change', () => {
 					source.close();
