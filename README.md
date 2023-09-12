@@ -113,7 +113,7 @@ file.
 Code-splitting is enabled so imports that are shared by the root entry points
 will be imported as shared chunks.
 
-## Importing projects set up this way
+## Importing Raggedy Dev projects (_we don't need no stinking package repository_)
 
 If you're using browser-compatible JS modules that fetch over HTTP, you don't
 need to publish your project on npm to get users.
@@ -126,8 +126,11 @@ For example, to import the sample `raggedy.js` module that's at the root of this
 project, you would do something like:
 
 ```js
-import * as raggedy from "https://esm.sh/gh/baldurbjarnason/raggedy-dev-setup/raggedy.js@1.0.0";
+import * as raggedy from "https://esm.sh/gh/baldurbjarnason/raggedy-dev-setup@v1.0.0-RC/raggedy.js";
 ```
+
+With that you would get the `raggedy.js` entry point in the release tagged
+`v1.0.0-RC`.
 
 ## Visual Studio Code
 
