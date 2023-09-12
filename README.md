@@ -95,17 +95,30 @@ You can include additional integration tests by adding Playwright test files to
 
 ## Bundling
 
-Running `tasks/check` will bundle `src/index.js` into `dist` using esbuild. It
-additionally will fetch modules over the network (or using deno's cache) just
-like the browser which means you don't need to install packages locally in any
-way. Modules work just like they do in the browser and the bundler will use your
-main import map from the `import_map.json` file.
+Running `tasks/check` will bundle every `.js` file in the root of the project
+into `dist` using esbuild. It additionally will fetch modules over the network
+(or using deno's cache) just like the browser which means you don't need to
+install packages locally in any way. Modules work just like they do in the
+browser and the bundler will use your main import map from the `import_map.json`
+file.
+
+Code-splitting is enabled so imports that are shared by the root entry points
+will be imported as shared chunks.
 
 ## Visual Studio Code
 
 This setup includes workspace settings to enable the deno extension (if
 installed) and set the editor to use it to format on save for the file types
 that deno supports.
+
+## Sublime Text
+
+This setup includes project settings to enable the deno extension (if installed)
+and set the editor to use it to format on save for the file types that deno
+supports.
+
+It also disables `LSP-typescript` in the project as that seems to conflict with
+`LSP-deno`.
 
 ## `.test` and `tests`
 

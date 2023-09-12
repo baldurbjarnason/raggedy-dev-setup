@@ -2,16 +2,24 @@
 // @ts-check
 import * as esbuild from "https://deno.land/x/esbuild@v0.19.2/mod.js";
 import { cache } from "npm:esbuild-plugin-cache@0.2.10";
-// import { basename } from "https://deno.land/std@0.201.0/path/mod.ts";
+import { expandGlobSync } from "https://deno.land/std@0.201.0/fs/mod.ts";
+import { relative } from "https://deno.land/std@0.201.0/path/mod.ts";
 
 // CONFIG
 
-const entryPoints = ["src/index.js"];
 const outdir = "dist";
 const splitting = true;
 const minify = true;
 
 // ENDCONFIG
+
+// We assume that every .js file in the project root is an entry-point.
+
+const entryPoints = Array.from(expandGlobSync("*.js")).map((
+	walkEntry,
+) => walkEntry.path).map((path) => {
+	return relative(Deno.cwd(), path);
+});
 
 const importmap = JSON.parse(await Deno.readTextFile("import_map.json"));
 
