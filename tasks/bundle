@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-net --allow-read --allow-write --allow-env --allow-run --allow-sys
+#!/usr/bin/env -S ./.bin/deno run --allow-net --allow-read --allow-write --allow-env --allow-run --allow-sys
 // @ts-check
 import * as esbuild from "https://deno.land/x/esbuild@v0.19.2/mod.js";
 import { cache } from "npm:esbuild-plugin-cache@0.2.10";

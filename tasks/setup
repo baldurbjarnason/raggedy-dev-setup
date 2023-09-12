@@ -14,7 +14,7 @@ if ! command -v unzip >/dev/null; then
   exit 1
 fi
 
-# The setup script we're currently in doesn't actually support windows
+# The setup script we're currently in doesn't actually support windows except possibly by accident.
 
 case $(uname -sm) in
 "Darwin x86_64") target="x86_64-apple-darwin" ;;
