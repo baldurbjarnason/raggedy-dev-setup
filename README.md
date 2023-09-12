@@ -59,6 +59,27 @@ For coverage, use the coverage panel in Chrome's development tools.
 To configure the test file (i.e. change mocha's interface or timeout settings),
 edit the configuration variables in the `tasks/serve` script itself.
 
+## `.test` and `tests`
+
+The `.test` directory contains vendored copies of `mocha` and `chai` to simplify
+test setup.
+
+I've also included an example `simpletest.js` file that shows how `mocha` and
+`chai` are set up by default.
+
+## Continuous Integration
+
+This setup includes continuous integration. Whenever you push to GitHub it will
+run an Action that installs [Playwright](https://playwright.dev/), runs the
+Mocha tests in Firefox, WebKit, and Chrome and passes or fails depending on the
+results of the Mocha unit tests.
+
+These tests only run in the action and you don't need to have node or a node
+version manager to use this setup.
+
+You can include additional integration tests by adding Playwright test files to
+`ci/tests`.
+
 ## Linting
 
 Running `tasks/lint` will run deno's linter on the current directory with the
@@ -80,19 +101,6 @@ files by including `// @ts-check` in the first line of the file.
 Running `tasks/check` will run deno's typescript checker on all files in the
 `src` directory. You can configure this in the `tasks/check` file.
 
-## Continuous Integration
-
-This setup includes continuous integration. Whenever you push to GitHub it will
-run an Action that installs [Playwright](https://playwright.dev/), runs the
-Mocha tests in Firefox, WebKit, and Chrome and passes or fails depending on the
-results of the Mocha unit tests.
-
-These tests only run in the action and you don't need to have node or a node
-version manager to use this setup.
-
-You can include additional integration tests by adding Playwright test files to
-`ci/tests`.
-
 ## Bundling
 
 Running `tasks/check` will bundle every `.js` file in the root of the project
@@ -104,6 +112,22 @@ file.
 
 Code-splitting is enabled so imports that are shared by the root entry points
 will be imported as shared chunks.
+
+## Importing projects set up this way
+
+If you're using browser-compatible JS modules that fetch over HTTP, you don't
+need to publish your project on npm to get users.
+
+Since a Raggedy Dev project is set up to use browser compatible importing, any
+content delivery network that lets you fetch files from a GitHub repository will
+serve to let you import the project.
+
+For example, to import the sample `raggedy.js` module that's at the root of this
+project, you would do something like:
+
+```js
+import * as raggedy from "https://esm.sh/gh/baldurbjarnason/raggedy-dev-setup/raggedy.js@1.0.0";
+```
 
 ## Visual Studio Code
 
@@ -119,11 +143,3 @@ supports.
 
 It also disables `LSP-typescript` in the project as that seems to conflict with
 `LSP-deno`.
-
-## `.test` and `tests`
-
-The `.test` directory contains vendored copies of `mocha` and `chai` to simplify
-test setup.
-
-I've also included an example `simpletest.js` file that shows how `mocha` and
-`chai` are set up by default.
