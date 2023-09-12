@@ -1,4 +1,4 @@
-## Raggedy Dev setup
+# Raggedy Dev setup
 
 _The browser is your runtime._
 
