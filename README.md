@@ -10,13 +10,13 @@ similar to how bash or external command line tools work. You don't need to have
 deno installed to use this, the setup script will download a local copy that'll
 be used in just this project.
 
-## Tasks
+## All tasks are scripts in the `tasks/` directory
 
 Instead of a task runner this project uses the file system and your shell. Tasks
-are in the `tasks` directory and are all executable scripts. Edit the scripts to
-configure them (although this is rarely necessary).
+are in the `tasks/` directory and are all executable scripts. Edit the scripts
+to configure them (although this is rarely necessary).
 
-## Setup
+### Run `tasks/setup` first
 
 Running `tasks/setup` will download a pinned version of `deno` into `.bin`. This
 is the version that the task scripts will use. There is also a
@@ -33,7 +33,7 @@ primary import map
 The setup task will also generate a self-signed certificate that the `serve`
 task will then use to provide an `https` server.
 
-## Testing
+### Run `tasks/serve` for unit testing in the browser with mocha
 
 Tests are based on mocha.
 
@@ -59,13 +59,46 @@ For coverage, use the coverage panel in Chrome's development tools.
 To configure the test file (i.e. change mocha's interface or timeout settings),
 edit the configuration variables in the `tasks/serve` script itself.
 
-## `.test` and `tests`
+#### `.test` and `tests`
 
 The `.test` directory contains vendored copies of `mocha` and `chai` to simplify
 test setup.
 
 I've also included an example `simpletest.js` file that shows how `mocha` and
 `chai` are set up by default.
+
+### Run `tasks/lint` to lint your `.js` files
+
+Running `tasks/lint` will run deno's linter on the current directory with the
+current settings from `deno.jsonc`. The deno VS Code extension should also
+automatically lint files in your workspace.
+
+### Run `tasks/format` to format your `.js` files
+
+Running `tasks/format` will run deno's formatter on the current directory with
+the current settings from `deno.jsonc`. The deno VS Code extension should also
+automatically format files in your workspace.
+
+### Run `tasks/check` to type check your `.js` files
+
+Type checking JS files is disabled by default. You can enable this throughout
+the workspaces by setting `checkJS` to `true` in `deno.jsonc` or in individual
+files by including `// @ts-check` in the first line of the file.
+
+Running `tasks/check` will run deno's typescript checker on all files in the
+`src` directory. You can configure this in the `tasks/check` file.
+
+### Run `tasks/bundle` to bundle your project
+
+Running `tasks/bundle` will bundle every `.js` file in the root of the project
+into `dist` using esbuild. It additionally will fetch modules over the network
+(or using deno's cache) just like the browser which means you don't need to
+install packages locally in any way. Modules work just like they do in the
+browser and the bundler will use your main import map from the `import_map.json`
+file.
+
+Code-splitting is enabled so imports that are shared by the root entry points
+will be imported as shared chunks.
 
 ## Continuous Integration
 
@@ -80,40 +113,9 @@ version manager to use this setup.
 You can include additional integration tests by adding Playwright test files to
 `ci/tests`.
 
-## Linting
+## Importing Raggedy Dev projects in other projects
 
-Running `tasks/lint` will run deno's linter on the current directory with the
-current settings from `deno.jsonc`. The deno VS Code extension should also
-automatically lint files in your workspace.
-
-## Formatting
-
-Running `tasks/format` will run deno's formatter on the current directory with
-the current settings from `deno.jsonc`. The deno VS Code extension should also
-automatically format files in your workspace.
-
-## Type checking
-
-Type checking JS files is disabled by default. You can enable this throughout
-the workspaces by setting `checkJS` to `true` in `deno.jsonc` or in individual
-files by including `// @ts-check` in the first line of the file.
-
-Running `tasks/check` will run deno's typescript checker on all files in the
-`src` directory. You can configure this in the `tasks/check` file.
-
-## Bundling
-
-Running `tasks/check` will bundle every `.js` file in the root of the project
-into `dist` using esbuild. It additionally will fetch modules over the network
-(or using deno's cache) just like the browser which means you don't need to
-install packages locally in any way. Modules work just like they do in the
-browser and the bundler will use your main import map from the `import_map.json`
-file.
-
-Code-splitting is enabled so imports that are shared by the root entry points
-will be imported as shared chunks.
-
-## Importing Raggedy Dev projects (_we don't need no stinking package repository_)
+_We don't need no stinking package registry._
 
 If you're using browser-compatible JS modules that fetch over HTTP, you don't
 need to publish your project on npm to get users.
