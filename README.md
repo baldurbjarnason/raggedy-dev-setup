@@ -2,8 +2,11 @@
 
 _The browser is your runtime._
 
-This is an attempt to define a minimalistic setup for web development where the
-primary runtime for the project is the browser itself, not node or deno.
+_The shell is your task runner._
+
+This is an experiment in defining a minimalistic but full-featured environment
+for web development where the primary runtime for the project is the browser
+itself, not node or deno.
 
 Deno is used here to implement some dev tasks but only in a capacity that's
 similar to how bash or external command line tools work. You don't need to have
@@ -24,6 +27,10 @@ is the version that the task scripts will use. There is also a
 the local binary.
 
 This setup doesn't interfere with your shell's `$PATH` in any way.
+
+The version is pinned to `v1.36.4`. This can be changed by editing the
+`DENO_VERSION` variable and the `DENO_SHA` checksum variable towards the top of
+the `tasks/setup` script.
 
 The `deno.jsonc` configuration file is set up so that deno knows that `js` files
 in this project are primarily for the browser. It is also documented with
@@ -100,7 +107,7 @@ file.
 Code-splitting is enabled so imports that are shared by the root entry points
 will be imported as shared chunks.
 
-## Continuous Integration
+## Continuous Integration and automated test runs
 
 This setup includes continuous integration. Whenever you push to GitHub it will
 run an Action that installs [Playwright](https://playwright.dev/), runs the
@@ -110,8 +117,42 @@ results of the Mocha unit tests.
 These tests only run in the action and you don't need to have node or a node
 version manager to use this setup.
 
-You can include additional integration tests by adding Playwright test files to
-`ci/tests`.
+The GitHub Action workflow does this by running `tasks/ci`,
+`npx playwright install --with-deps`, and `tasks/ci-test`.
+
+If you already have node setup on your machine, you could use Playwright as a
+test runner for mocha with coverage. Just run `tasks/ci` to move the config
+files to project root, commit, and finally run
+`npx playwright install --with-deps`.
+
+then you can use `tasks/ci-test` to run the tests with coverage.
+
+This is error-prone if your platform isn't well-supported by the Playwright
+team. You may have to edit `playwright.config.js` and remove the `webkit`
+project for it to run.
+
+### `tasks/ci`
+
+This task will copy the `package.json`, `package-lock.json` and
+`playwright.config.js` files from `ci/` into the project root that are necessary
+for Playwright tests to run.
+
+You can edit the original files in `ci/` for additional configuration.
+
+### `tasks/ci-test`
+
+Run this task after `tasks/ci` to have Playwright run all of the tests files in
+`ci/tests`. You can include additional integration tests by adding Playwright
+test files to `ci/tests`. This task will automatically gather coverage
+information from Playwright and use the local copy of deno to both report
+coverage data to standard out (should be visible in Action logs) and to
+`cov_profile.lcov` which can be sent to coverage reporting services by adding
+their actions to the workflow.
+
+To automatically gather coverage data from additional integration tests, you
+need to import the `pageWithCoverage` fixture from `ci/pageWithCoverage.js` and
+use that as the main `page` object for interacting with the page. See
+`ci/tests/mocha-spec.js` as an example.
 
 ## Importing Raggedy Dev projects in other projects
 
