@@ -1,7 +1,5 @@
 #!/bin/bash
 set -eu
-shopt -s extglob
-shopt -s globstar
 
 npx playwright test
 tasks/coverage
