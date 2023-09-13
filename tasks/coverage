@@ -1,0 +1,12 @@
+#!/bin/bash
+set -eu
+shopt -s extglob
+shopt -s globstar
+
+if [[ -z "${COVERAGE-}" ]]; then
+  COVERAGE=coverage
+fi
+
+.bin/deno cache **/*.js
+.bin/deno coverage $COVERAGE --exclude=.test --lcov --output=cov_profile.lcov
+.bin/deno coverage $COVERAGE --exclude=.test

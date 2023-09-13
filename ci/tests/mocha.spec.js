@@ -1,6 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../pageWithCoverage.js";
 
-test("Mocha tests pass", async ({ page }) => {
+test("Mocha Test Suite", async ({ pageWithCoverage: page }) => {
 	await page.goto("/");
 	const results = await page.waitForFunction(() => {
 		if (window._testResults) {
