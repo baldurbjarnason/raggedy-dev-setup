@@ -9,7 +9,7 @@
 		"lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
 	},
 	"lint": {
-		"exclude": [".test/", "dist/", "ci/"],
+		"exclude": [".test/", "dist/"],
 		"rules": {
 			"tags": ["recommended"],
 			"exclude": ["ban-ts-comment"]
@@ -17,7 +17,7 @@
 	},
 	// Tabs are more accessible
 	"fmt": {
-		"exclude": [".test/", "dist/", "ci/"],
+		"exclude": [".test/", "dist/"],
 		"useTabs": true
 	},
 	// Defer to an external import map as that's simpler for other scripts to parse than a jsonc file.
