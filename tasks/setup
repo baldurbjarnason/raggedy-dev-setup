@@ -2,6 +2,15 @@
 set -eu
 platform=$(uname -ms)
 
+
+# Configuration
+
+# We pin versions in this house because we don't like moving targets
+DENO_VERSION="v1.36.4"
+DENO_SHA="2c3ba45690cf8ace6f48882317024528bc733f23863f94936ec6018a02bbca4a"
+
+# End configuration
+
 mkdir -p .bin
 
 # This bit is from the deno install script, MIT licenced, https://github.com/denoland/deno
@@ -25,14 +34,16 @@ case $(uname -sm) in
   ;;
 *) target="x86_64-unknown-linux-gnu" ;;
 esac
-# We pin versions in this house because we don't like moving targets
-DENO_VERSION="v1.36.4"
 deno_uri="https://github.com/denoland/deno/releases/download/${DENO_VERSION}/deno-${target}.zip"
 
 EXE=".bin/deno"
 
 curl --fail --location --progress-bar --output "$EXE.zip" "$deno_uri"
+echo
 unzip -d ".bin" -o "$EXE.zip"
+echo
+echo "Checking the integrity of the download with sha256sum"
+echo "$DENO_SHA $EXE" | sha256sum --check 
 chmod +x "$EXE"
 rm "$EXE.zip"
 
