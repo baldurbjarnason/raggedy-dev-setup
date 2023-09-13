@@ -3,8 +3,5 @@ set -eu
 shopt -s extglob
 shopt -s globstar
 
-
-COVERAGE=coverage
-rm -r $COVERAGE/*.json
 npx playwright test
 tasks/coverage
