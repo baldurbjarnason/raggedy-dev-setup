@@ -8,6 +8,7 @@ import {
 	ServerSentEventStreamTarget,
 } from "https://deno.land/std@0.201.0/http/server_sent_event.ts";
 import { parse } from "https://deno.land/std@0.201.0/flags/mod.ts";
+import { resolveImportMap } from "https://deno.land/x/importmap@0.2.1/mod.ts";
 
 const parsedArgs = parse(Deno.args);
 
@@ -96,7 +97,20 @@ async function renderTestHTML() {
 		return `<script type="module" src="${path}"></script>`;
 	}).join("\n");
 
-	const importMap = await Deno.readTextFile("import_map.json");
+	// We should load the vendored import map first.
+	let importMap;
+	try {
+		const baseURL = new URL(`https://localhost:${port}/vendor/`);
+		const importMapObject = resolveImportMap(
+			JSON.parse(await Deno.readTextFile("vendor/import_map.json")),
+			baseURL,
+		);
+		importMap = JSON.stringify(
+			importMapObject,
+		);
+	} catch (_err) {
+		importMap = await Deno.readTextFile("import_map.json");
+	}
 
 	const body = `<!DOCTYPE html>
 <html lang="en">

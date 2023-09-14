@@ -9,7 +9,7 @@
 		"lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
 	},
 	"lint": {
-		"exclude": [".test/", "dist/"],
+		"exclude": [".test/", "dist/", "vendor/"],
 		"rules": {
 			"tags": ["recommended"],
 			"exclude": ["ban-ts-comment"]
@@ -17,11 +17,11 @@
 	},
 	// Tabs are more accessible
 	"fmt": {
-		"exclude": [".test/", "dist/"],
+		"exclude": [".test/", "dist/", "vendor/"],
 		"useTabs": true
 	},
 	// Defer to an external import map as that's simpler for other scripts to parse than a jsonc file.
-	"importMap": "import_map.json"
+	"importMap": "./vendor/import_map.json"
 }
 // Most of the time the above will work for both browser and deno code, especially since the point of this setup is to focus on browser code.
 // To type check deno only worker code you need to set "lib" in those file specifically. Something like:
