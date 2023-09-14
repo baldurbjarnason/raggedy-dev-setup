@@ -74,6 +74,17 @@ test setup.
 I've also included an example `simpletest.js` file that shows how `mocha` and
 `chai` are set up by default.
 
+### Run `tasks/vendor` to vendor dependencies
+
+The `tasks/vendor` script will save local copies of your project and create an
+import map that the test server and the bundler will load automatically.
+
+That means your project will no longer be fetching those dependencies over the
+network.
+
+Re-run `tasks/vendor` whenever you modify the `import_map.json` file in the
+project root or whenever you add or remove an `http` dependency in your code.
+
 ### Run `tasks/lint` to lint your `.js` files
 
 Running `tasks/lint` will run deno's linter on the current directory with the
@@ -99,13 +110,16 @@ Running `tasks/check` will run deno's typescript checker on all files in the
 
 Running `tasks/bundle` will bundle every `.js` file in the root of the project
 into `dist` using esbuild. It additionally will fetch modules over the network
-(or using deno's cache) just like the browser which means you don't need to
-install packages locally in any way. Modules work just like they do in the
-browser and the bundler will use your main import map from the `import_map.json`
-file.
+(or using deno's cache) just like the browser.
+
+This means you don't need to install packages locally in any way. Modules work
+just like they do in the browser and the bundler will use the
+`vendor/import_map.json` file if it exist to find modules, which means that
+dependencies that have been vendored with `tasks/vendor` should be automatically
+supported.
 
 Code-splitting is enabled so imports that are shared by the root entry points
-will be imported as shared chunks.
+will be imported as shared chunks into the `dist/` directory.
 
 ## Continuous Integration and automated test runs
 

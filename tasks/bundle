@@ -1,27 +1,106 @@
 #!/usr/bin/env -S ./.bin/deno run --allow-net --allow-read --allow-write --allow-env --allow-run --allow-sys
-// @ts-check
+// @ts-nocheck
 import * as esbuild from "https://deno.land/x/esbuild@v0.19.2/mod.js";
-import { cache } from "npm:esbuild-plugin-cache@0.2.10";
 import { expandGlobSync } from "https://deno.land/std@0.201.0/fs/mod.ts";
-import { relative } from "https://deno.land/std@0.201.0/path/mod.ts";
-
-// CONFIG
+import {
+	fromFileUrl,
+	relative,
+	toFileUrl,
+} from "https://deno.land/std@0.201.0/path/mod.ts";
+import {
+	resolveImportMap,
+	resolveModuleSpecifier,
+} from "https://deno.land/x/importmap@0.2.1/mod.ts";
+import { createCache } from "https://deno.land/x/deno_cache@0.6.0/mod.ts";
 
 const outdir = "dist";
 const splitting = true;
 const minify = true;
 
-// ENDCONFIG
+// We should load the vendored import map first if it exists.
+let importMap;
+try {
+	const baseURL = new URL(`vendor/`, fromFileUrl(Deno.cwd()));
+	const importMapObject = resolveImportMap(
+		JSON.parse(await Deno.readTextFile("vendor/import_map.json")),
+		baseURL,
+	);
+	importMap = importMapObject;
+} catch (_err) {
+	importMap = JSON.parse(await Deno.readTextFile("import_map.json"));
+}
+
+// So, existing esbuild plugins don't actually resolve importmaps properly.
+// Ended up writing my own.
+function denoCache() {
+	const loader = createCache();
+	return {
+		name: "deno-cache",
+		setup(build) {
+			build.onResolve({ filter: /.*/ }, async (args) => {
+				// Paths through this: importer is http, importer is empty, importer is full path.
+				let resolvedPath;
+				if (args.importer === "") {
+					resolvedPath = resolveModuleSpecifier(
+						args.path,
+						importMap,
+						toFileUrl(args.resolveDir + "/"),
+					);
+				} else if (args.importer.startsWith("http")) {
+					resolvedPath = resolveModuleSpecifier(
+						args.path,
+						importMap,
+						new URL(args.importer),
+					);
+				} else {
+					resolvedPath = resolveModuleSpecifier(
+						args.path,
+						importMap,
+						toFileUrl(args.importer),
+					);
+				}
+				const moduleUrl = new URL(resolvedPath);
+				let path;
+				if (moduleUrl.protocol === "file:") {
+					path = fromFileUrl(new URL(resolvedPath));
+					return {
+						path,
+						namespace: "file",
+					};
+				} else if (moduleUrl.protocol.startsWith("http")) {
+					return {
+						path: resolvedPath,
+						namespace: "deno-cache",
+					};
+				}
+				if (args.namespace === "deno-cache") {
+					return {
+						path: new URL(resolvedPath, args.importer).toString(),
+						namespace: "deno-cache",
+					};
+				}
+			});
+			build.onLoad({ filter: /.*/, namespace: "deno-cache" }, async (args) => {
+				const file = await loader.load(new URL(args.path), void 0, "use");
+				const contents = file.content;
+				return { contents, loader: "js" };
+			});
+		},
+	};
+}
 
 // We assume that every .js file in the project root is an entry-point.
 
 const entryPoints = Array.from(expandGlobSync("*.js")).map((
 	walkEntry,
-) => walkEntry.path).map((path) => {
-	return relative(Deno.cwd(), path);
-});
-
-const importmap = JSON.parse(await Deno.readTextFile("import_map.json"));
+) => walkEntry.path)
+	.map((path) => {
+		return relative(Deno.cwd(), path);
+	})
+	.filter((entry) => {
+		// Let's not include playwright files if they appear
+		if (!entry.endsWith("playwright.config.js")) return entry;
+	});
 
 await esbuild
 	.build({
@@ -32,7 +111,19 @@ await esbuild
 		splitting,
 		minify,
 		sourcemap: true,
-		plugins: [cache({ importmap })],
+		plugins: [denoCache()],
 	});
 
 esbuild.stop();
+
+// const baseURL = new URL(`http://localhost:${port}/`);
+for (const path of entryPoints) {
+	console.log(`Bundling "${path}" to "dist/"`);
+	const file = await Deno.stat(`dist/${path}`);
+	if (file.isFile) {
+		console.log(
+			`Bundled size of dist/${path} in bytes:`,
+			file.size,
+		);
+	}
+}
