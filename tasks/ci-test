@@ -1,5 +1,6 @@
 #!/bin/bash
 set -eu
 
+rm -rf coverage/tmp
 npx playwright test
 tasks/coverage

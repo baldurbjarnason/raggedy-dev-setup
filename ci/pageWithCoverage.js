@@ -15,19 +15,26 @@ export const test = base.extend({
 		if (browserName === "chromium") {
 			const coverage = await page.coverage.stopJSCoverage();
 			await fs.mkdir("coverage", { recursive: true });
+			let result = [];
+			await fs.mkdir("coverage/tmp", { recursive: true });
 			for (let index = 0; index < coverage.length; index++) {
 				const cov = coverage[index];
 				const curl = new URL(cov.url);
-				if (curl.hostname === "localhost" && curl.pathname !== "/") {
+				if (
+					curl.hostname === "localhost" && curl.pathname !== "/" &&
+					!curl.pathname.startsWith("/vendor/") &&
+					!curl.pathname.startsWith("/.test/")
+				) {
 					const path = curl.pathname.replace("/", "");
 					cov.url = url.pathToFileURL(path);
-					const uuid = randomUUID();
-					await fs.writeFile(
-						`coverage/${uuid}.json`,
-						JSON.stringify(cov),
-					);
+					result = result.concat(cov);
 				}
 			}
+			const uuid = randomUUID();
+			await fs.writeFile(
+				`coverage/tmp/${uuid}.json`,
+				JSON.stringify({ result }),
+			);
 		}
 	},
 });
