@@ -3,7 +3,8 @@ set -eu
 shopt -s extglob
 shopt -s globstar
 
-SRC_DIR=src
-TEST_DIR=tests
+SRC_DIR=src/
+TEST_DIR=tests/
 
-./.bin/deno check $SRC_DIR/**/*.js $TEST_DIR/**/*.js
+## Got to use the non-vendor import map as the vendored one will cause errors
+./.bin/deno check $SRC_DIR**/*.js $TEST_DIR**/*.js --import-map=import_map.json
