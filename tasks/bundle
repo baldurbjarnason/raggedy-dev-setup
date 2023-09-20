@@ -18,21 +18,25 @@ const splitting = true;
 const minify = true;
 
 // We should load the vendored import map first if it exists.
-let importMap;
+let vendorImportMap;
 try {
-	const baseURL = new URL(`vendor/`, fromFileUrl(Deno.cwd()));
+	const baseURL = new URL(`vendor/`, toFileUrl(Deno.cwd() + "/"));
 	const importMapObject = resolveImportMap(
 		JSON.parse(await Deno.readTextFile("vendor/import_map.json")),
 		baseURL,
 	);
-	importMap = importMapObject;
+	vendorImportMap = importMapObject;
 } catch (_err) {
-	importMap = JSON.parse(await Deno.readTextFile("import_map.json"));
+	//
 }
+const originalImportMap = JSON.parse(
+	await Deno.readTextFile("import_map.json"),
+);
 
 // So, existing esbuild plugins don't actually resolve importmaps properly.
 // Ended up writing my own.
 function denoCache(external = false) {
+	const importMap = external ? originalImportMap : vendorImportMap;
 	const loader = createCache();
 	return {
 		name: "deno-cache",
