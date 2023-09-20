@@ -4,6 +4,8 @@ _The browser is your runtime._
 
 _The shell is your task runner._
 
+**NOT FOR FRAMEWORKS**.
+
 This is an experiment in defining a minimalistic but full-featured environment
 for web development where the primary runtime for the project is the browser
 itself, not node or deno.
