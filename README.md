@@ -170,24 +170,46 @@ use that as the main `page` object for interacting with the page. See
 
 ## Importing Raggedy Dev projects in other projects
 
+_This only works if you use URL module specifiers. Bare imports breaks default
+compatibility._
+
 _We don't need no stinking package registry._
 
 If you're using browser-compatible JS modules that fetch over HTTP, you don't
-need to publish your project on npm to get users.
+need to publish your project on npm to distribute your module.
 
 Since a Raggedy Dev project is set up to use browser compatible importing, any
 content delivery network that lets you fetch files from a GitHub repository will
 serve to let you import the project.
 
-For example, to import the sample `raggedy.js` module that's at the root of this
-project, you would do something like:
+For this reason, build files in `dist` are _included in the commit_.
+
+`tasks/bundle` now creates two bundles for each entry point:
+
+**.min.js**: a minified bundle of the entry point and all of its dependencies
+**.js** (no .min): a bundle of local JS files only, all dependencies are
+external.
+
+This should mean that, for example, this should work for importing one of the
+main entry points for this sample project:
 
 ```js
-import * as raggedy from "https://esm.sh/gh/baldurbjarnason/raggedy-dev-setup@v1.0.0-RC/raggedy.js";
+import * as raggedy from "https://esm.sh/gh/baldurbjarnason/raggedy-dev-setup@v1.1.0/dist/raggedy.js";
 ```
 
 With that you would get the `raggedy.js` entry point in the release tagged
-`v1.0.0-RC`.
+`v1.1.0`.
+
+If `raggedy.js` imports a dependency from `esm.sh` that's shared with something
+else you're importing, then we won't be loading thtat twice any more.
+
+However, if you aren't importing the module to use in your own JS code, but are
+instead adding a script to a web page, then the `.min.js` files would be a
+better fit as they are bundled to be standalone and minified.
+
+```html
+<script type="module" src="https://esm.sh/gh/baldurbjarnason/raggedy-dev-setup@v1.1.0/dist/raggedy.min.js"></script>
+```
 
 ## Visual Studio Code
 
