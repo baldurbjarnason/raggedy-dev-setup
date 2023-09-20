@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../src/grass.js", "../src/index.js"],
+  "sourcesContent": ["import { blake3 } from \"hash-wasm\";\nexport async function grass() {\n\tconst grassHash = await blake3(\"Grass!\");\n\tconsole.log(\"Grass!\", grassHash);\n\treturn grassHash;\n}\n", "import { grass } from \"./grass.js\";\n\nexport function grassy() {\n\tconsole.log(\"dingus\");\n\treturn grass();\n}\n"],
+  "mappings": ";AAAA,SAAS,cAAc;AACvB,eAAsB,QAAQ;AAC7B,QAAM,YAAY,MAAM,OAAO,QAAQ;AACvC,UAAQ,IAAI,UAAU,SAAS;AAC/B,SAAO;AACR;;;ACHO,SAAS,SAAS;AACxB,UAAQ,IAAI,QAAQ;AACpB,SAAO,MAAM;AACd;",
+  "names": []
+}

@@ -50,9 +50,6 @@ web_modules/
 .env.production.local
 .env.local
 
-# Build output
-dist
-
 # Ignore local binaries. If you're using your own .gitignore, this is the line to add to it.
 .bin/
 *.sublime-workspace

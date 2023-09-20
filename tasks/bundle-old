@@ -1,0 +1,136 @@
+#!/usr/bin/env -S ./.bin/deno run --allow-net --allow-read --allow-write --allow-env --allow-run --allow-sys
+// @ts-nocheck
+import * as esbuild from "https://deno.land/x/esbuild@v0.19.2/mod.js";
+import { cache } from "npm:esbuild-plugin-cache@0.2.10";
+import { expandGlobSync } from "https://deno.land/std@0.201.0/fs/mod.ts";
+import {
+	basename,
+	fromFileUrl,
+	relative,
+	toFileUrl,
+} from "https://deno.land/std@0.201.0/path/mod.ts";
+import { bundle } from "https://deno.land/x/emit@0.27.0/mod.ts";
+import { serveDir } from "https://deno.land/std@0.201.0/http/file_server.ts";
+import {
+	resolveImportMap,
+	resolveModuleSpecifier,
+} from "https://deno.land/x/importmap@0.2.1/mod.ts";
+// CONFIG
+
+const outdir = "dist";
+const splitting = true;
+const minify = true;
+const port = 9999;
+
+// ENDCONFIG
+
+export const abortController = new AbortController();
+
+Deno.serve({ port, signal: abortController.signal, onListen() {} }, (req) => {
+	return serveDir(req);
+});
+// We should load the vendored import map first.
+let importMap;
+try {
+	const baseURL = new URL(`http://localhost:${port}/vendor/`);
+	const importMapObject = resolveImportMap(
+		JSON.parse(await Deno.readTextFile("vendor/import_map.json")),
+		baseURL,
+	);
+	importMap = importMapObject;
+} catch (_err) {
+	importMap = JSON.parse(await Deno.readTextFile("import_map.json"));
+}
+
+console.log(
+	resolveModuleSpecifier(
+		"/v131/hash-wasm@4.9.0/denonext/hash-wasm.mjs",
+		importMap,
+		new URL(`http://localhost:9999/vendor/esm.sh/hash-wasm@4.9.0.proxied.js`),
+	),
+);
+
+// We assume that every .js file in the project root is an entry-point.
+
+const entryPoints = Array.from(expandGlobSync("*.js")).map((
+	walkEntry,
+) => walkEntry.path)
+	.map((path) => {
+		return relative(Deno.cwd(), path);
+	})
+	.filter((entry) => {
+		if (!entry.endsWith("playwright.config.js")) return entry;
+	});
+
+// So, it turns out that the support that esbuild-plugin-cache provides for import maps doesn't really work for import maps that aren't in the root of the current project. Libraries that remap this are all browser-oriented so filesystem paths get converted into file: urls, which esbuild or esbuild-plugin-cache error on. The bundling still works as is, but it's fetching modules from the cache or the network instead of the vendor directory.
+
+// let importMap;
+// try {
+// 	const importMapBaseURL = new URL(
+// 		"vendor/import_map.json",
+// 		toFileUrl(Deno.cwd()),
+// 	);
+// 	importMap = resolveImportMap(
+// 		JSON.parse(await Deno.readTextFile("vendor/import_map.json")),
+// 		importMapBaseURL,
+// 	);
+// } catch (_err) {
+// 	importMap = JSON.parse(await Deno.readTextFile("import_map.json"));
+// }
+// const importMap = JSON.parse(await Deno.readTextFile("vendor/import_map.json"));
+
+// importMap.baseUrl = new URL(
+// 	"vendor/",
+// 	toFileUrl(Deno.cwd()),
+// );
+// console.log(importMap);
+
+// const importMap = JSON.parse(getImportMap());
+// console.log(importMap);
+
+// await esbuild
+// 	.build({
+// 		entryPoints,
+// 		bundle: true,
+// 		outdir,
+// 		format: "esm",
+// 		splitting,
+// 		minify,
+// 		sourcemap: true,
+// 		plugins: [cache({ importmap: importMap })],
+// 	});
+
+// esbuild.stop();
+
+const baseURL = new URL(`http://localhost:${port}/`);
+for (const path of entryPoints) {
+	console.log(`Bundling "${path}" to "dist/"`);
+	const result = await bundle(
+		new URL(path, baseURL),
+		{
+			importMap,
+			compilerOptions: {
+				sourceMap: true,
+			},
+		},
+	);
+	await Deno.writeTextFile(
+		`dist/${path}`,
+		result.code,
+	);
+	if (result.map) {
+		await Deno.writeTextFile(
+			`dist/${path}.map`,
+			result.map,
+		);
+	}
+	const file = await Deno.stat(`dist/${path}`);
+	if (file.isFile) {
+		console.log(
+			`Bundled size of dist/${path} in bytes:`,
+			file.size,
+		);
+	}
+}
+
+abortController.abort();

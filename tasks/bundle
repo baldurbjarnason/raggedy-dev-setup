@@ -32,7 +32,7 @@ try {
 
 // So, existing esbuild plugins don't actually resolve importmaps properly.
 // Ended up writing my own.
-function denoCache() {
+function denoCache(external = false) {
 	const loader = createCache();
 	return {
 		name: "deno-cache",
@@ -71,6 +71,7 @@ function denoCache() {
 					return {
 						path: resolvedPath,
 						namespace: "deno-cache",
+						external,
 					};
 				}
 				if (args.namespace === "deno-cache") {
@@ -102,10 +103,12 @@ const entryPoints = Array.from(expandGlobSync("*.js")).map((
 		if (!entry.endsWith("playwright.config.js")) return entry;
 	});
 
+// Need to do a non-minified bundle as well for export
 await esbuild
 	.build({
 		entryPoints,
 		bundle: true,
+		entryNames: "[dir]/[name].min",
 		outdir,
 		format: "esm",
 		splitting,
@@ -113,28 +116,50 @@ await esbuild
 		sourcemap: true,
 		plugins: [denoCache()],
 	});
+await esbuild
+	.build({
+		entryPoints,
+		bundle: true,
+		outdir,
+		format: "esm",
+		splitting,
+		minify: false,
+		sourcemap: true,
+		plugins: [denoCache(true)],
+	});
 
 esbuild.stop();
 
 // const baseURL = new URL(`http://localhost:${port}/`);
+console.log("\n%ctasks/bundle\n", "font-weight: bold");
 for (const path of entryPoints) {
-	console.log("\n%ctasks/bundle", "font-weight: bold");
 	console.log(
-		`Bundling %c${path} %cto %cdist/`,
-		"font-weight: bold",
-		"font-weight: normal",
+		`%c${path}:`,
 		"font-weight: bold",
 	);
-	const file = await Deno.stat(`dist/${path}`);
-	if (file.isFile) {
+	const fullPath = `dist/${path}`;
+	const fullFile = await Deno.stat(fullPath);
+	if (fullFile.isFile) {
 		console.log(
-			`Bundled size of dist/${path} in bytes:`,
-			file.size,
+			`Bundled size of %c${fullPath} %c(dependencies external) in bytes: %c${fullFile.size}`,
+			"font-weight: bold",
+			"font-weight: normal",
+			"font-weight: bold; color: yellow",
 		);
 	}
-	console.log(
-		"%ctasks/bundle: %cdone\n",
-		"font-weight: bold",
-		"font-weight: bold; color: green",
-	);
+	const minPath = `dist/${path.replace(".js", ".min.js")}`;
+	const file = await Deno.stat(minPath);
+	if (file.isFile) {
+		console.log(
+			`Bundled size of %c${minPath} %cin bytes: %c${file.size}`,
+			"font-weight: bold",
+			"font-weight: normal",
+			"font-weight: bold; color: yellow",
+		);
+	}
 }
+console.log(
+	"\n%ctasks/bundle: %cdone\n",
+	"font-weight: bold",
+	"font-weight: bold; color: green",
+);
