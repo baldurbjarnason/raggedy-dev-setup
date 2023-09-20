@@ -3,11 +3,18 @@ set -eu
 platform=$(uname -ms)
 
 
+BBlack='\033[1;30m'
+Color_Off='\033[0m'
+BGreen='\033[1;32m'
 # Configuration
 
 # We pin versions in this house because we don't like moving targets
 DENO_VERSION="v1.36.4"
 DENO_SHA="2c3ba45690cf8ace6f48882317024528bc733f23863f94936ec6018a02bbca4a"
+
+
+echo
+echo -e "${BBlack}tasks/setup${Color_Off}:"
 
 # End configuration
 
@@ -54,3 +61,5 @@ echo "Generating key and cert files for https test server"
 openssl req -x509 -newkey rsa:4096 -keyout $PWD/.bin/dev.key -out $PWD/.bin/dev.cert -days 9999 -nodes -subj /CN=127.0.0.1 &> /dev/null
 
 echo "Setup done"
+echo -e "${BBlack}tasks/setup${Color_Off}: ${BGreen}done${Color_Off}"
+echo

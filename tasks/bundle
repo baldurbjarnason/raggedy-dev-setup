@@ -118,7 +118,13 @@ esbuild.stop();
 
 // const baseURL = new URL(`http://localhost:${port}/`);
 for (const path of entryPoints) {
-	console.log(`Bundling "${path}" to "dist/"`);
+	console.log("\n%ctasks/bundle", "font-weight: bold");
+	console.log(
+		`Bundling %c${path} %cto %cdist/`,
+		"font-weight: bold",
+		"font-weight: normal",
+		"font-weight: bold",
+	);
 	const file = await Deno.stat(`dist/${path}`);
 	if (file.isFile) {
 		console.log(
@@ -126,4 +132,9 @@ for (const path of entryPoints) {
 			file.size,
 		);
 	}
+	console.log(
+		"%ctasks/bundle: %cdone\n",
+		"font-weight: bold",
+		"font-weight: bold; color: green",
+	);
 }

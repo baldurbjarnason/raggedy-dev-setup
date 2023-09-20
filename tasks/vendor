@@ -3,12 +3,18 @@ set -eu
 shopt -s extglob
 shopt -s globstar
 
-SRC_DIR=src
-TEST_DIR=tests
+SRC_DIR=src/
+TEST_DIR=tests/
+BBlack='\033[1;30m'
+Color_Off='\033[0m'
+BGreen='\033[1;32m'
+
 
 echo
-echo "Downloading local copies of the imports in $SRC_DIR and $TEST_DIR"
-./.bin/deno vendor $SRC_DIR/**/*.js $TEST_DIR/**/*.js --force --import-map=import_map.json &> /dev/null
-echo "Combined import map created at vendor/import_map.json."
-echo "To change the import map, edit your original import map in project root and re-run tasks/vendor"
+echo -e "${BBlack}tasks/vendor${Color_Off}:"
+echo -e "Downloading local copies of the imports in $BBlack$SRC_DIR$Color_Off and $BBlack$TEST_DIR$Color_Off"
+./.bin/deno vendor $SRC_DIR**/*.js $TEST_DIR**/*.js --force --import-map=import_map.json &> /dev/null
+echo -e "Combined import map created at ${BBlack}vendor/import_map.json${Color_Off}."
+echo -e "To update the combined import map, edit your original import map in project root and re-run ${BBlack}tasks/vendor${Color_Off}"
+echo -e "${BBlack}tasks/vendor${Color_Off}: ${BGreen}done${Color_Off}"
 echo
