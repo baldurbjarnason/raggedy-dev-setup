@@ -1,0 +1,145 @@
+#!/usr/bin/env -S ./.bin/deno run --allow-net --allow-read --allow-env --allow-write
+// @ts-nocheck
+
+import { createCache } from "https://deno.land/x/deno_cache@0.6.0/mod.ts";
+import { createGraph } from "https://deno.land/x/deno_graph@0.55.0/mod.ts";
+// import { format, gt, parse } from "https://deno.land/std@0.202.0/semver/mod.ts";
+
+// Warning! This is super messy at the moment.
+
+const IMPORT_MAP_PATH = "import_map.json";
+
+console.log(
+	`\n%ctasks/audit\n`,
+	"font-weight: bold",
+);
+
+const importMap = JSON.parse(await Deno.readTextFile(IMPORT_MAP_PATH));
+const packages = Object.keys(importMap.imports);
+
+// create a cache where the location will be determined environmentally
+const cache = createCache();
+// destructuring the two functions we need to pass to the graph
+const { cacheInfo, load } = cache;
+
+const rootPackages = {};
+for (const packageName of packages) {
+	const name = String(packageName);
+	// console.log(name);
+	if (name.startsWith("npm:")) {
+		// We aren't going to look at non-npm mappings.
+		// Might add support for gh: mappings later
+		const url = importMap.imports[name];
+		// console.log(url);
+		// create a graph that will use the cache above to load and cache dependencies
+		const graph = await createGraph(url, {
+			cacheInfo,
+			load,
+		});
+
+		// log out the console a similar output to `deno info` on the command line.
+		// console.log(graph);
+		rootPackages[name] = listModules(graph.modules);
+		const advisories = await fetchAdvisories(rootPackages[name]);
+		if (advisories.length !== 0) {
+			console.log(
+				`Package %c${name} %chas vulnerable dependencies: `,
+				"font-weight: bold; color: yellow",
+				"font-weight: normal; color: inherit",
+			);
+			console.log(`\t%c${advisories.join(" ")}`, "font-weight: bold");
+		}
+	}
+}
+
+function listModules(graph, indent = "") {
+	let packages = [];
+	listModulesInternal(graph, indent);
+	return Array.from(new Set(packages));
+	function listModulesInternal(graph, indent = "") {
+		graph.forEach((entry) => {
+			if (entry.mediaType && entry.mediaType !== "Dts") {
+				const identity = getVersion(entry.specifier);
+				packages = packages.concat(identity);
+				// console.log(indent + entry.specifier);
+			}
+			if (entry.dependencies) {
+				listModulesInternal(entry.dependencies, indent + "\t");
+			}
+		});
+	}
+}
+
+function getVersion(url) {
+	const urlObject = new URL(url);
+	let pathParts = urlObject.pathname.split("/").filter((segment) => segment);
+	if (pathParts[0].startsWith("v")) {
+		pathParts = pathParts.slice(1);
+	}
+	let packagePart = pathParts[0];
+	let version;
+	if (packagePart.startsWith("@")) {
+		const versionParts = pathParts[1].split("@").filter((segment) => segment);
+		packagePart = `${packagePart}/${versionParts[0]}`;
+		version = versionParts[1];
+	} else {
+		const versionParts = packagePart.split("@").filter((segment) => segment);
+		packagePart = versionParts[0];
+		version = versionParts[1];
+	}
+
+	// console.log(packagePart, version);
+	return `${packagePart}@${version}`;
+}
+
+async function fetchAdvisories(identities) {
+	// So I can't figure out how to get the github API to return advisories on scoped npm packages.
+	// const url =
+	// 	`https://api.github.com/advisories?type=reviewed&ecosystem=npm&affects=${
+	// 		encodeURIComponent(identities.join(","))
+	// 	}`;
+	// Using the Sonatype OSSIndex instead
+	const url = "https://ossindex.sonatype.org/api/v3/component-report";
+	const coordinates = identities.map((identity) => {
+		if (identity.startsWith("@")) {
+			return `pkg:npm/%40${identity.slice(1)}`;
+		} else {
+			return `pkg:npm/${identity}`;
+		}
+	});
+	const body = {
+		coordinates,
+	};
+	const result = await fetch(url, {
+		method: "POST",
+		body: JSON.stringify(body),
+		headers: {
+			accept: "application/vnd.ossindex.component-report.v1+json",
+			"content-type":
+				"application/vnd.ossindex.component-report-request.v1+json",
+		},
+	});
+	if (result.ok) {
+		const advisories = await result.json();
+		let unsafe = [];
+		for (const advisory of advisories) {
+			if (advisory.vulnerabilities && advisory.vulnerabilities.length !== 0) {
+				unsafe = unsafe.concat(
+					decodeURIComponent(advisory.coordinates.replace("pkg:npm/", "")),
+				);
+			}
+		}
+		return unsafe;
+		// if (advisories && Array.isArray(advisories)) {
+		// 	return advisories.map((advisory) => advisory.vulnerabilities).flat();
+		// }
+	} else {
+		return [];
+	}
+}
+
+console.log(
+	"\n%ctasks/add: %cdone\n",
+	"font-weight: bold",
+	"font-weight: bold; color: green",
+);

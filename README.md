@@ -123,6 +123,32 @@ supported.
 Code-splitting is enabled so imports that are shared by the root entry points
 will be imported as shared chunks into the `dist/` directory.
 
+## Experimental dependency-management with import maps
+
+`tasks/add`, `tasks/outdated`, and `tasks/audit` are a first pass at a bare
+mininum dependency-management system using import maps.
+
+`tasks/add npm:hash-wasm` will add a `npm:hash-wasm` entry to your import map
+`imports` that maps to the latest `esm.sh` url for the `hash-wasm` package. You
+can use semantic versioning so `tasks/add npm:hash-wasm@\^4.9 --exact` will
+create that entry directly without resolving it.
+
+`tasks/outdated` will resolve the url for the listed entry in the import map and
+the latest url for that package and compare the version in the two urls.
+Packages whose resolved mapped version is lower than the resolved latest version
+are listed.
+
+`tasks/audit` will load the dependency graph, using the graph tools made by the
+`deno` team, extract package names and versions from `esm.sh` urls that appear
+in the graph, submit those to
+[Sonatype's OSSIndex](https://ossindex.sonatype.org/about) and alert you if any
+of the packages you list in your import map are importing what looks like a
+vulnerable dependency.
+
+(My original plan was to use Github's REST API for global security advisories,
+but I couldn't get it to work with insecure scoped packages. They would always
+return as if they had no vulnerabilities.)
+
 ## Continuous Integration and automated test runs
 
 This setup includes continuous integration. Whenever you push to GitHub it will

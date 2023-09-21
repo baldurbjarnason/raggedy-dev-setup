@@ -1,0 +1,97 @@
+#!/usr/bin/env -S ./.bin/deno run --allow-net --allow-read
+// @ts-nocheck
+// This script is a fairly straightforward automation of the process of:
+// 1. Loading a version-less esm.sh url for an npm package.
+// 2. Taking the resulting versioned url.
+// 3. Comparing the version in that url with the one saved in the import map
+// 4. Listing the packages whose latest url contains a newer version number
+//
+import { format, gt, parse } from "https://deno.land/std@0.202.0/semver/mod.ts";
+
+const IMPORT_MAP_PATH = "import_map.json";
+
+const importMap = JSON.parse(await Deno.readTextFile(IMPORT_MAP_PATH));
+const packages = Object.keys(importMap.imports);
+
+console.log(
+	`\n%ctasks/outdated\n`,
+	"font-weight: bold",
+);
+
+let noUpdates = true;
+for (const packageName of packages) {
+	const name = String(packageName);
+	if (name.startsWith("npm:")) {
+		// We aren't going to look at non-npm mappings.
+		// Might add support for gh: mappings later
+		const url = importMap.imports[name];
+		let version;
+		// Because esm.sh urls can use semantic versioning or release tags, we have to resolve the url if we can to get the actual current version
+		const result = await fetch(url, {
+			method: "HEAD",
+			redirect: "follow",
+		});
+		if (result.ok) {
+			version = getVersion(result.url);
+		} else {
+			version = getVersion(url);
+		}
+		const latest = `https://esm.sh/${String(packageName).replace("npm:", "")}`;
+		const latestResult = await fetch(latest, {
+			method: "HEAD",
+			redirect: "follow",
+		});
+		if (result.ok) {
+			const latestVersion = getVersion(latestResult.url);
+			if (gt(latestVersion, version)) {
+				noUpdates = false;
+				console.log(
+					`%c${packageName} %chas been updated from %c${
+						format(version)
+					} %cto %c${format(latestVersion)}`,
+					"font-weight: bold; color: blue",
+					"font-weight: normal; color: inherit",
+					"font-weight: bold",
+					"font-weight: normal; color: inherit",
+					"font-weight: bold",
+				);
+			}
+		}
+	}
+}
+
+if (noUpdates) {
+	console.log("Your dependencies seem to be up-to-date.");
+} else {
+	console.log(
+		"\nUse %ctasks/add PACKAGE_NAME %cto update a package's url to its latest version",
+		"font-weight: bold;",
+		"font-weight: normal;",
+	);
+}
+
+function getVersion(url) {
+	const urlObject = new URL(url);
+	let pathParts = urlObject.pathname.split("/").filter((segment) => segment);
+	if (pathParts[0].startsWith("v")) {
+		pathParts = pathParts.slice(1);
+	}
+	let packagePart = pathParts[0];
+	let version;
+	if (packagePart.startsWith("@")) {
+		const versionParts = pathParts[1].split("@").filter((segment) => segment);
+		packagePart = `${packagePart}/${versionParts[0]}`;
+		version = versionParts[1];
+	} else {
+		const versionParts = packagePart.split("@").filter((segment) => segment);
+		packagePart = versionParts[0];
+		version = versionParts[1];
+	}
+	return parse(version);
+}
+
+console.log(
+	"\n%ctasks/outdated: %cdone\n",
+	"font-weight: bold",
+	"font-weight: bold; color: green",
+);

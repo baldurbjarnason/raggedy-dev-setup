@@ -1,0 +1,89 @@
+#!/usr/bin/env -S ./.bin/deno run --allow-net --allow-read --allow-write
+
+// This script is a fairly straightforward automation of the process of:
+// 1. Loading a version-less esm.sh url for an npm package.
+// 2. Taking the resulting versioned url.
+// 3. Adding that versioned url to your import map, mapped to the package name.
+//
+// The reason we do this is to make sure that we aren't hardcoding package versions in our code and managing it from a central place.
+import { parse } from "https://deno.land/std@0.202.0/flags/mod.ts";
+
+// A possible future feature would be a flag to let you use any server that uses esm.sh's url structure.
+// A very definite future feature is supporting the gh: prefix to add github packages
+const parsedArgs = parse(Deno.args);
+const packages = parsedArgs._;
+
+const IMPORT_MAP_PATH = "import_map.json";
+
+const importMap = JSON.parse(await Deno.readTextFile(IMPORT_MAP_PATH));
+
+console.log(
+	`\n%ctasks/add %c${packages.join(" ")}\n`,
+	"font-weight: bold",
+	"font-weight: normal",
+);
+
+for (const packageName of packages) {
+	const name = String(packageName).replace("npm:", "");
+	if (parsedArgs.exact) {
+		// If you're explicitly including a version tag, then we're going to assume you know what you're doing.
+		const prefix = name.split("@")[0];
+		const url = `https://esm.sh/${name}`;
+		importMap.imports[`npm:${prefix}`] = url;
+
+		console.log(
+			`mapping %cnpm:${prefix} %cto %c${url}`,
+			"font-weight: bold; color: blue",
+			"font-weight: normal; color: inherit",
+			"font-weight: bold",
+		);
+	} else {
+		const url = `https://esm.sh/${name}`;
+		const result = await fetch(url, {
+			method: "HEAD",
+			redirect: "follow",
+		});
+		if (result.ok) {
+			importMap.imports[`npm:${name}`] = result.url;
+			console.log(
+				`mapping %cnpm:${name} %cto %c${result.url}`,
+				"font-weight: bold; color: blue",
+				"font-weight: normal; color: inherit",
+				"font-weight: bold",
+			);
+		} else {
+			console.log(
+				`package %${packageName} %cnot found.`,
+				"font-weight: bold; color: blue",
+				"font-weight: normal; color: inherit",
+			);
+		}
+	}
+}
+
+await Deno.writeTextFile(
+	IMPORT_MAP_PATH,
+	JSON.stringify(importMap, null, "\t"),
+);
+
+const VENDOR_MAP = "vendor/import_map.json";
+
+const file = await Deno.stat(VENDOR_MAP);
+if (file.isFile) {
+	console.log(
+		"\n%cvendor/import_map.json %cdetected",
+		"font-weight: bold",
+		"font-weight: normal",
+	);
+	console.log(
+		"Remember to run %ctasks/vendor %cagain",
+		"font-weight: bold",
+		"font-weight: normal",
+	);
+}
+
+console.log(
+	"\n%ctasks/add: %cdone\n",
+	"font-weight: bold",
+	"font-weight: bold; color: green",
+);

@@ -1,6 +1,6 @@
 {
   "imports": {
-    "hash-wasm": "./esm.sh/hash-wasm@4.9.0.js",
+    "npm:hash-wasm": "./esm.sh/hash-wasm@4.9.0.js",
     "https://esm.sh/": "./esm.sh/"
   },
   "scopes": {
